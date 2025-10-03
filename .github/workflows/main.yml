@@ -18,6 +18,16 @@ jobs:
         run: yarn install
       - name: build
         run: yarn build
+      - name: clear target directory
+        uses: appleboy/ssh-action@master
+        with:
+            host: ${{ secrets.SERVER_HOST }}
+            username: ${{ secrets.SERVER_USER }}
+            password: ${{ secrets.SERVER_PASSWORD }}
+            port: 22
+            script: |
+              rm -rf /var/www/myfrontend/*
+              mkdir -p /var/www/myfrontend
       - name: copy dist file with scp
         uses: appleboy/scp-action@master
         with:
@@ -27,4 +37,16 @@ jobs:
             port: 22
             source: 'dist/*'
             target: '/var/www/myfrontend/'
+      - name: clear server cache
+        uses: appleboy/ssh-action@master
+        with:
+            host: ${{ secrets.SERVER_HOST }}
+            username: ${{ secrets.SERVER_USER }}
+            password: ${{ secrets.SERVER_PASSWORD }}
+            port: 22
+            script: |
+              # 如果使用 nginx，重载配置
+              sudo systemctl reload nginx 2>/dev/null || true
+              # 如果使用 apache，重载配置
+              sudo systemctl reload apache2 2>/dev/null || true
  
